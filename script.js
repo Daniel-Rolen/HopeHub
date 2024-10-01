@@ -16,18 +16,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const audioFiles = await audioResponse.text();
             const videoFiles = await videoResponse.text();
             
-            const audioMatches = audioFiles.match(/href="([^"]+\.mp3)"/g) || [];
-            const videoMatches = videoFiles.match(/href="([^"]+\.mp4)"/g) || [];
+            if (audioFiles.trim() !== '') {
+                const audioMatches = audioFiles.match(/href="([^"]+\.mp3)"/g) || [];
+                audioMatches.forEach(match => {
+                    const fileName = match.match(/href="([^"]+)"/)[1];
+                    addOption(fileName, 'audio');
+                });
+            }
             
-            audioMatches.forEach(match => {
-                const fileName = match.match(/href="([^"]+)"/)[1];
-                addOption(fileName, 'audio');
-            });
-            
-            videoMatches.forEach(match => {
-                const fileName = match.match(/href="([^"]+)"/)[1];
-                addOption(fileName, 'video');
-            });
+            if (videoFiles.trim() !== '') {
+                const videoMatches = videoFiles.match(/href="([^"]+\.mp4)"/g) || [];
+                videoMatches.forEach(match => {
+                    const fileName = match.match(/href="([^"]+)"/)[1];
+                    addOption(fileName, 'video');
+                });
+            }
+
+            if (mediaSelector.options.length === 1) {
+                const option = document.createElement('option');
+                option.textContent = 'No media files found';
+                mediaSelector.appendChild(option);
+            }
         } catch (error) {
             console.error('Error loading media files:', error);
         }
