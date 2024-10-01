@@ -1,87 +1,81 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM content loaded');
     const videoPlayer = document.getElementById('videoPlayer');
-    console.log('Video player element:', videoPlayer);
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const playlistSelector = document.getElementById('playlistSelector');
+    const errorMessage = document.getElementById('errorMessage');
 
-    let videoFiles = ['moar___ab8f80.mp4']; // Fallback video file
-    let currentVideoIndex = 0;
+    let videoFiles = [];
 
     async function loadMediaFiles() {
         try {
-            console.log('Attempting to load video files');
             const videoResponse = await fetch('/video/');
-            
             if (!videoResponse.ok) {
                 throw new Error(`HTTP error! status: ${videoResponse.status}`);
             }
-            
             const videoText = await videoResponse.text();
-            
-            console.log('Video directory content:', videoText);
-            
             const foundVideos = videoText.match(/href="([^"]+\.mp4)"/g);
             if (foundVideos && foundVideos.length > 0) {
                 videoFiles = foundVideos.map(match => match.match(/href="([^"]+)"/)[1]);
-                console.log('Found video files:', videoFiles);
+                updatePlaylist();
             } else {
-                console.log('No video files found in directory listing, using fallback');
-            }
-
-            console.log('Video files to play:', videoFiles);
-
-            if (videoFiles.length > 0) {
-                console.log('Starting video playback');
-                playNextVideo();
-            } else {
-                console.error('No video files available to play');
+                throw new Error('No video files found');
             }
         } catch (error) {
             console.error('Error loading video files:', error);
-            console.log('Using fallback video file');
-            playNextVideo();
+            displayErrorMessage('Error loading video files. Please try again later.');
         }
     }
 
-    function playNextVideo() {
-        if (videoFiles.length === 0) {
-            console.error('No video files to play');
-            return;
-        }
-        const videoSrc = `/video/${videoFiles[currentVideoIndex]}`;
-        console.log('Attempting to play video:', videoSrc);
-        videoPlayer.src = videoSrc;
-        console.log('Video player source set to:', videoPlayer.src);
-        videoPlayer.load(); // Explicitly load the video
-        console.log('Video loaded, attempting to play');
-        videoPlayer.play().then(() => {
-            console.log('Video playback started successfully');
-        }).catch(error => {
-            console.error('Error playing video:', error);
-            console.log('Video player error event:', videoPlayer.error);
-            displayErrorMessage('Error loading video. Please check your connection and try again.');
+    function updatePlaylist() {
+        playlistSelector.innerHTML = '<option value="">Select a video</option>';
+        videoFiles.forEach(file => {
+            const option = document.createElement('option');
+            option.value = file;
+            option.textContent = file;
+            playlistSelector.appendChild(option);
         });
-        currentVideoIndex = (currentVideoIndex + 1) % videoFiles.length;
+    }
+
+    function playVideo(src) {
+        videoPlayer.src = `/video/${src}`;
+        videoPlayer.load();
+        videoPlayer.play().catch(error => {
+            console.error('Error playing video:', error);
+            displayErrorMessage('Error playing video. Please try again.');
+        });
     }
 
     function displayErrorMessage(message) {
-        const errorMessageElement = document.getElementById('errorMessage');
-        errorMessageElement.textContent = message;
-        errorMessageElement.style.display = 'block';
-        console.log('Error message displayed:', message);
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
     }
 
+    playPauseBtn.addEventListener('click', () => {
+        if (videoPlayer.paused) {
+            videoPlayer.play();
+        } else {
+            videoPlayer.pause();
+        }
+    });
+
+    volumeSlider.addEventListener('input', () => {
+        videoPlayer.volume = volumeSlider.value;
+    });
+
+    playlistSelector.addEventListener('change', () => {
+        const selectedVideo = playlistSelector.value;
+        if (selectedVideo) {
+            playVideo(selectedVideo);
+        }
+    });
+
     videoPlayer.addEventListener('ended', () => {
-        console.log('Video ended, playing next video');
-        playNextVideo();
+        const currentIndex = videoFiles.indexOf(playlistSelector.value);
+        const nextIndex = (currentIndex + 1) % videoFiles.length;
+        playlistSelector.value = videoFiles[nextIndex];
+        playVideo(videoFiles[nextIndex]);
     });
-    videoPlayer.addEventListener('error', (e) => {
-        console.error('Video player error:', e);
-        console.log('Video player error details:', videoPlayer.error);
-        displayErrorMessage('Error loading video. Please check your connection and try again.');
-        console.log('Attempting to play next video due to error');
-        playNextVideo();
-    });
-    console.log('Added event listeners to video player');
 
     loadMediaFiles();
 });
