@@ -1,4 +1,4 @@
-modules = ["nodejs-20"]
+modules = ["nodejs-20", "python-3.11"]
 
 [workflows]
 runButton = "Project"
@@ -12,6 +12,10 @@ author = "agent"
 task = "workflow.run"
 args = "Start HTTP Server"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Create Video Directory"
+
 [[workflows.workflow]]
 name = "Start HTTP Server"
 author = "agent"
@@ -23,6 +27,17 @@ agentRequireRestartOnSave = false
 task = "shell.exec"
 args = "npx http-server -p 8000"
 waitForPort = 8000
+
+[[workflows.workflow]]
+name = "Create Video Directory"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python create_video_dir.py"
 
 [deployment]
 run = ["sh", "-c", "npx http-server -p 8000"]
