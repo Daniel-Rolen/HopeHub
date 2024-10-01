@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadMediaFiles() {
         try {
             console.log('Attempting to load video files');
-            const videoResponse = await fetch('video/');
+            const videoResponse = await fetch('/video/');
             
             if (!videoResponse.ok) {
                 throw new Error(`HTTP error! status: ${videoResponse.status}`);
@@ -46,19 +46,27 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('No video files to play');
             return;
         }
-        const videoSrc = `video/${videoFiles[currentVideoIndex]}`;
+        const videoSrc = `/video/${videoFiles[currentVideoIndex]}`;
         console.log('Attempting to play video:', videoSrc);
         videoPlayer.src = videoSrc;
         videoPlayer.play().catch(error => {
             console.error('Error playing video:', error);
             console.log('Video player error event:', videoPlayer.error);
+            displayErrorMessage('Error loading video. Please check your connection and try again.');
         });
         currentVideoIndex = (currentVideoIndex + 1) % videoFiles.length;
+    }
+
+    function displayErrorMessage(message) {
+        const errorMessageElement = document.getElementById('errorMessage');
+        errorMessageElement.textContent = message;
+        errorMessageElement.style.display = 'block';
     }
 
     videoPlayer.addEventListener('ended', playNextVideo);
     videoPlayer.addEventListener('error', (e) => {
         console.error('Video player error:', e);
+        displayErrorMessage('Error loading video. Please check your connection and try again.');
         playNextVideo(); // Try to play the next video if there's an error
     });
     console.log('Added event listeners to video player');
