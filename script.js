@@ -49,13 +49,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (media.type === 'video') {
             videoPlayer.src = `video/${media.file}`;
             videoPlayer.style.display = 'block';
-            audioPlayer.pause();
-            audioPlayer.currentTime = 0;
             videoPlayer.play().catch(error => {
                 console.error('Error playing video:', error);
                 displayError('Error playing video');
             });
-        } else {
+        } else if (media.type === 'audio') {
             audioPlayer.src = `audio/${media.file}`;
             audioPlayer.play().catch(error => {
                 console.error('Error playing audio:', error);
@@ -64,21 +62,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         console.log('Video source URL:', videoPlayer.src);
+        console.log('Audio source URL:', audioPlayer.src);
 
-        videoPlayer.onended = () => {
-            console.log('Video ended, playing next...');
+        videoPlayer.onended = audioPlayer.onended = () => {
+            console.log('Media ended, playing next...');
             currentIndex = (currentIndex + 1) % mediaFiles.length;
             playNextMedia();
-        };
-
-        audioPlayer.onended = () => {
-            console.log('Audio ended, playing next...');
-            if (hasMoreAudioFiles()) {
-                currentIndex = (currentIndex + 1) % mediaFiles.length;
-                playNextMedia();
-            } else {
-                playNextVideo();
-            }
         };
 
         videoPlayer.onerror = (e) => {
@@ -90,22 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error loading audio:', e);
             displayError('Error loading audio');
         };
-    }
-
-    function hasMoreAudioFiles() {
-        for (let i = currentIndex + 1; i < mediaFiles.length; i++) {
-            if (mediaFiles[i].type === 'audio') {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function playNextVideo() {
-        do {
-            currentIndex = (currentIndex + 1) % mediaFiles.length;
-        } while (mediaFiles[currentIndex].type !== 'video');
-        playNextMedia();
     }
 
     function displayError(message) {
