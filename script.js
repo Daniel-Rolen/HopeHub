@@ -16,11 +16,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const audioFiles = await audioResponse.text();
             const videoFiles = await videoResponse.text();
             
+            let filesAdded = false;
+
             if (audioFiles.trim() !== '') {
                 const audioMatches = audioFiles.match(/href="([^"]+\.mp3)"/g) || [];
                 audioMatches.forEach(match => {
                     const fileName = match.match(/href="([^"]+)"/)[1];
                     addOption(fileName, 'audio');
+                    filesAdded = true;
                 });
             }
             
@@ -29,13 +32,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 videoMatches.forEach(match => {
                     const fileName = match.match(/href="([^"]+)"/)[1];
                     addOption(fileName, 'video');
+                    filesAdded = true;
                 });
             }
 
-            if (mediaSelector.options.length === 1) {
+            if (!filesAdded) {
                 const option = document.createElement('option');
                 option.textContent = 'No media files found';
                 mediaSelector.appendChild(option);
+                console.log('No media files found, added option to selector');
+            } else {
+                console.log('Media files found and added to selector');
             }
         } catch (error) {
             console.error('Error loading media files:', error);
