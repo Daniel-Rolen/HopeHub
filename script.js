@@ -42,6 +42,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function getCorrespondingAudio(videoFile) {
+        const audioFile = videoFile.replace(/\.(mp4|webm)$/, '.mp3');
+        const correspondingAudio = mediaFiles.find(media => media.type === 'audio' && media.file === audioFile);
+        return correspondingAudio ? `audio/${correspondingAudio.file}` : '';
+    }
+
     function playNextMedia() {
         const media = mediaFiles[currentIndex];
         console.log('Playing next media:', media);
@@ -49,11 +55,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (media.type === 'video') {
             videoPlayer.src = `video/${media.file}`;
             videoPlayer.style.display = 'block';
+            const correspondingAudio = getCorrespondingAudio(media.file);
+            audioPlayer.src = correspondingAudio;
             videoPlayer.play().catch(error => {
                 console.error('Error playing video:', error);
                 displayError('Error playing video');
             });
+            if (correspondingAudio) {
+                audioPlayer.play().catch(error => {
+                    console.error('Error playing corresponding audio:', error);
+                    displayError('Error playing corresponding audio');
+                });
+            }
         } else if (media.type === 'audio') {
+            videoPlayer.src = ''; // Clear any previous video
+            videoPlayer.style.display = 'none';
             audioPlayer.src = `audio/${media.file}`;
             audioPlayer.play().catch(error => {
                 console.error('Error playing audio:', error);
@@ -64,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Video source URL:', videoPlayer.src);
         console.log('Audio source URL:', audioPlayer.src);
 
+        // Set up event listeners for both players
         videoPlayer.onended = audioPlayer.onended = () => {
             console.log('Media ended, playing next...');
             currentIndex = (currentIndex + 1) % mediaFiles.length;
