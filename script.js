@@ -29,19 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
             ];
             
             console.log('Media Files:', mediaFiles);
+            console.log('Contents of video directory:', await fetch('/video/').then(res => res.text()));
             
             if (mediaFiles.length > 0) {
-                console.log('Checking if video file exists:', '/video/' + mediaFiles[0].file);
-                fetch('/video/' + mediaFiles[0].file)
-                    .then(response => {
-                        if (response.ok) {
-                            console.log('Video file exists and is accessible');
-                        } else {
-                            console.error('Video file not found or inaccessible');
-                        }
-                    })
-                    .catch(error => console.error('Error checking video file:', error));
-                
                 playNextMedia();
             } else {
                 console.error('No media files found');
@@ -53,7 +43,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function playNextMedia() {
+    async function checkVideoFile(url) {
+        try {
+            const response = await fetch(url, { method: 'HEAD' });
+            console.log('Video file check:', url, response.ok ? 'accessible' : 'not accessible', response.status);
+        } catch (error) {
+            console.error('Error checking video file:', url, error);
+        }
+    }
+
+    async function playNextMedia() {
         const media = mediaFiles[currentIndex];
         console.log('Attempting to play media:', media);
         
@@ -64,12 +63,19 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Video player dimensions:', player.clientWidth, 'x', player.clientHeight);
             
             const sourceUrl = `/${media.type}/${media.file}`;
-            console.log('Setting source URL:', sourceUrl);
+            console.log('Full source URL:', new URL(sourceUrl, window.location.href).href);
+            
+            await checkVideoFile(sourceUrl);
+            
             player.src = sourceUrl;
             player.style.display = 'block';
             otherPlayer.style.display = 'none';
             
             player.load(); // Explicitly load the media before playing
+            
+            player.addEventListener('loadedmetadata', () => {
+                console.log('Media metadata loaded:', player.duration, 'seconds');
+            });
             
             setTimeout(() => {
                 if (player.readyState === 0) {
@@ -108,6 +114,15 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Audio playback error:', e);
         console.log('Audio error details:', audioPlayer.error);
     });
+
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
+                console.log('Video src changed:', videoPlayer.src);
+            }
+        });
+    });
+    observer.observe(videoPlayer, { attributes: true });
 
     loadMediaFiles();
 });
