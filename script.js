@@ -31,6 +31,17 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Media Files:', mediaFiles);
             
             if (mediaFiles.length > 0) {
+                console.log('Checking if video file exists:', '/video/' + mediaFiles[0].file);
+                fetch('/video/' + mediaFiles[0].file)
+                    .then(response => {
+                        if (response.ok) {
+                            console.log('Video file exists and is accessible');
+                        } else {
+                            console.error('Video file not found or inaccessible');
+                        }
+                    })
+                    .catch(error => console.error('Error checking video file:', error));
+                
                 playNextMedia();
             } else {
                 console.error('No media files found');
@@ -50,6 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const otherPlayer = media.type === 'video' ? audioPlayer : videoPlayer;
         
         try {
+            console.log('Video player dimensions:', player.clientWidth, 'x', player.clientHeight);
+            
             const sourceUrl = `/${media.type}/${media.file}`;
             console.log('Setting source URL:', sourceUrl);
             player.src = sourceUrl;
@@ -57,6 +70,14 @@ document.addEventListener('DOMContentLoaded', () => {
             otherPlayer.style.display = 'none';
             
             player.load(); // Explicitly load the media before playing
+            
+            setTimeout(() => {
+                if (player.readyState === 0) {
+                    console.error('Video failed to load after 5 seconds');
+                } else {
+                    console.log('Video loaded successfully, readyState:', player.readyState);
+                }
+            }, 5000);
             
             player.play().then(() => {
                 console.log('Media playback started successfully');
