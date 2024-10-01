@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM content loaded');
     const videoPlayer = document.getElementById('videoPlayer');
+    console.log('Video player element:', videoPlayer);
 
     let videoFiles = [];
     let currentVideoIndex = 0;
@@ -42,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     videoPlayer.addEventListener('ended', playNextVideo);
+    console.log('Added ended event listener to video player');
 
     loadMediaFiles();
 });
