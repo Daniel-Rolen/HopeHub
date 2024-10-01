@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const foundVideos = videoText.match(/href="([^"]+\.mp4)"/g);
             if (foundVideos && foundVideos.length > 0) {
                 videoFiles = foundVideos.map(match => match.match(/href="([^"]+)"/)[1]);
+                console.log('Found video files:', videoFiles);
             } else {
                 console.log('No video files found in directory listing, using fallback');
             }
@@ -49,7 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const videoSrc = `/video/${videoFiles[currentVideoIndex]}`;
         console.log('Attempting to play video:', videoSrc);
         videoPlayer.src = videoSrc;
-        videoPlayer.play().catch(error => {
+        console.log('Video player source set to:', videoPlayer.src);
+        videoPlayer.load(); // Explicitly load the video
+        console.log('Video loaded, attempting to play');
+        videoPlayer.play().then(() => {
+            console.log('Video playback started successfully');
+        }).catch(error => {
             console.error('Error playing video:', error);
             console.log('Video player error event:', videoPlayer.error);
             displayErrorMessage('Error loading video. Please check your connection and try again.');
@@ -61,13 +67,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const errorMessageElement = document.getElementById('errorMessage');
         errorMessageElement.textContent = message;
         errorMessageElement.style.display = 'block';
+        console.log('Error message displayed:', message);
     }
 
-    videoPlayer.addEventListener('ended', playNextVideo);
+    videoPlayer.addEventListener('ended', () => {
+        console.log('Video ended, playing next video');
+        playNextVideo();
+    });
     videoPlayer.addEventListener('error', (e) => {
         console.error('Video player error:', e);
+        console.log('Video player error details:', videoPlayer.error);
         displayErrorMessage('Error loading video. Please check your connection and try again.');
-        playNextVideo(); // Try to play the next video if there's an error
+        console.log('Attempting to play next video due to error');
+        playNextVideo();
     });
     console.log('Added event listeners to video player');
 
