@@ -5,9 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentIndex = 0;
 
     async function loadMediaFiles() {
+        console.log('Attempting to load media files...');
         try {
-            const videoResponse = await fetch('./video/');
-            const audioResponse = await fetch('./audio/');
+            const videoResponse = await fetch('video/');
+            const audioResponse = await fetch('audio/');
             
             if (!videoResponse.ok || !audioResponse.ok) {
                 throw new Error(`HTTP error! status: ${videoResponse.status} ${audioResponse.status}`);
@@ -24,22 +25,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 ...foundAudios.map(match => ({ type: 'audio', file: match.match(/href="([^"]+)"/)[1] }))
             ];
             
-            if (mediaFiles.length > 0) {
-                playNextMedia();
-            } else {
-                console.error('No media files found');
-            }
+            console.log('Media files loaded:', mediaFiles);
         } catch (error) {
             console.error('Error loading media files:', error);
+            console.log('Falling back to config.js...');
+            mediaFiles = window.mediaConfig || [];
+        }
+
+        if (mediaFiles.length > 0) {
+            console.log('Starting playback...');
+            playNextMedia();
+        } else {
+            console.error('No media files found');
         }
     }
 
     function playNextMedia() {
         const media = mediaFiles[currentIndex];
+        console.log('Playing next media:', media);
         const player = media.type === 'video' ? videoPlayer : audioPlayer;
         const otherPlayer = media.type === 'video' ? audioPlayer : videoPlayer;
         
-        player.src = `./${media.type}/${media.file}`;
+        player.src = `${media.type}/${media.file}`;
         player.style.display = 'block';
         otherPlayer.style.display = 'none';
         
@@ -48,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         player.onended = () => {
+            console.log('Media ended, playing next...');
             currentIndex = (currentIndex + 1) % mediaFiles.length;
             playNextMedia();
         };
