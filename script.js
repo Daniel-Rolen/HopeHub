@@ -44,23 +44,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function playNextMedia() {
         console.log('Current index:', currentIndex);
-        console.log('Total media files:', mediaFiles.length);
+        console.log('Total media files:', mediaFiles);
 
-        let media = mediaFiles[currentIndex];
-        console.log('Attempting to play media:', media);
+        let videoFile = mediaFiles.find(media => media.type === 'video');
+        let audioFile = mediaFiles[currentIndex];
 
-        if (media.type === 'video') {
-            videoPlayer.src = `video/${media.file}`;
+        if (videoFile) {
+            videoPlayer.src = `video/${videoFile.file}`;
             videoPlayer.style.display = 'block';
-            audioPlayer.style.display = 'none';
+            videoPlayer.loop = true; // Make the video loop
             videoPlayer.play().catch(error => {
                 console.error('Error playing video:', error);
                 displayError('Error playing video');
             });
-        } else if (media.type === 'audio') {
-            audioPlayer.src = `audio/${media.file}`;
-            audioPlayer.style.display = 'block';
-            videoPlayer.style.display = 'none';
+        }
+
+        if (audioFile && audioFile.type === 'audio') {
+            audioPlayer.src = `audio/${audioFile.file}`;
+            audioPlayer.style.display = 'none'; // Hide audio player
             audioPlayer.play().catch(error => {
                 console.error('Error playing audio:', error);
                 displayError('Error playing audio');
@@ -71,17 +72,9 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Audio source URL:', audioPlayer.src);
     }
 
-    videoPlayer.onended = () => {
-        console.log('Video ended, playing next...');
-        console.log('Next index:', (currentIndex + 1) % mediaFiles.length);
-        currentIndex = (currentIndex + 1) % mediaFiles.length;
-        playNextMedia();
-    };
-
     audioPlayer.onended = () => {
         console.log('Audio ended, playing next...');
-        console.log('Next index:', (currentIndex + 1) % mediaFiles.length);
-        currentIndex = (currentIndex + 1) % mediaFiles.length;
+        currentIndex = (currentIndex + 1) % mediaFiles.filter(media => media.type === 'audio').length;
         playNextMedia();
     };
 
