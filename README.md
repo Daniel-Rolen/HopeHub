@@ -4,7 +4,7 @@ This project is a simple, minimalist web-based media player that loops through v
 
 ## Features
 
-- Automatically plays video and audio files in a loop
+- Attempts to play video and audio files in a loop (currently experiencing synchronization issues)
 - Supports multiple video and audio formats (mp4, webm, mp3, ogg, wav)
 - Minimalist design with a full-screen video player
 - Fallback to audio-only playback when no video is available
@@ -32,6 +32,10 @@ This project is a simple, minimalist web-based media player that loops through v
 - `config.js`: Configuration file for media files (fallback if directory listing fails)
 - `video/`: Directory for video files
 - `audio/`: Directory for audio files
+
+## Known Issues
+
+- Video playback stops when audio starts playing. We are actively working on resolving this issue.
 
 ## Contributing
 

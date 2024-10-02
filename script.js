@@ -74,6 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     audioPlayer.play().catch(console.error);
                 }
             };
+
+            // Add event listener to restart video if it stops
+            videoPlayer.addEventListener('pause', () => {
+                if (videoPlayer.currentTime < videoPlayer.duration) {
+                    videoPlayer.play().catch(console.error);
+                }
+            });
         } else if (media.type === 'audio') {
             videoPlayer.src = '';
             videoPlayer.style.display = 'none';
