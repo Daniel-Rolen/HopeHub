@@ -42,44 +42,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function getCorrespondingAudio(videoFile) {
-        const audioFile = videoFile.replace(/\.(mp4|webm)$/, '.mp3');
-        const correspondingAudio = mediaFiles.find(media => media.type === 'audio' && media.file === audioFile);
-        return correspondingAudio ? `audio/${correspondingAudio.file}` : '';
-    }
-
     function playNextMedia() {
+        videoPlayer.pause();
+        audioPlayer.pause();
+        videoPlayer.currentTime = 0;
+        audioPlayer.currentTime = 0;
+
         const media = mediaFiles[currentIndex];
         console.log('Playing next media:', media);
 
         if (media.type === 'video') {
             videoPlayer.src = `video/${media.file}`;
             videoPlayer.style.display = 'block';
-            const correspondingAudio = getCorrespondingAudio(media.file);
-            audioPlayer.src = correspondingAudio;
-            
-            // Play video and audio together
-            Promise.all([
-                videoPlayer.play(),
-                correspondingAudio ? audioPlayer.play() : Promise.resolve()
-            ]).catch(error => {
-                console.error('Error playing media:', error);
-                displayError('Error playing media');
-            });
-
-            // Ensure video keeps playing even if audio ends
-            audioPlayer.onended = () => {
-                if (videoPlayer.currentTime < videoPlayer.duration) {
-                    audioPlayer.currentTime = 0;
-                    audioPlayer.play().catch(console.error);
-                }
-            };
-
-            // Add event listener to restart video if it stops
-            videoPlayer.addEventListener('pause', () => {
-                if (videoPlayer.currentTime < videoPlayer.duration) {
-                    videoPlayer.play().catch(console.error);
-                }
+            audioPlayer.src = '';
+            videoPlayer.play().catch(error => {
+                console.error('Error playing video:', error);
+                displayError('Error playing video');
             });
         } else if (media.type === 'audio') {
             videoPlayer.src = '';
@@ -95,28 +73,19 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Audio source URL:', audioPlayer.src);
     }
 
-    // Modify the video onended event to handle looping
     videoPlayer.onended = () => {
-        console.log('Video ended, looping or playing next...');
-        if (audioPlayer.src && audioPlayer.currentTime < audioPlayer.duration) {
-            // If audio is still playing, loop the video
-            videoPlayer.currentTime = 0;
-            videoPlayer.play().catch(console.error);
-        } else {
-            // Move to the next media
+        console.log('Video ended, playing next...');
+        currentIndex = (currentIndex + 1) % mediaFiles.length;
+        playNextMedia();
+    };
+
+    audioPlayer.onended = () => {
+        console.log('Audio ended, playing next...');
+        if (mediaFiles[currentIndex].type === 'audio') {
             currentIndex = (currentIndex + 1) % mediaFiles.length;
             playNextMedia();
         }
     };
-
-    function syncAudioVideo() {
-        if (Math.abs(videoPlayer.currentTime - audioPlayer.currentTime) > 0.3) {
-            audioPlayer.currentTime = videoPlayer.currentTime;
-        }
-    }
-
-    // Call this function periodically
-    setInterval(syncAudioVideo, 1000);
 
     function displayError(message) {
         const errorDisplay = document.getElementById('errorDisplay');
