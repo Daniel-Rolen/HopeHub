@@ -58,11 +58,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const correspondingAudio = getCorrespondingAudio(media.file);
             audioPlayer.src = correspondingAudio;
             
-            Promise.all([videoPlayer.play(), correspondingAudio ? audioPlayer.play() : Promise.resolve()])
-                .catch(error => {
-                    console.error('Error playing media:', error);
-                    displayError('Error playing media');
-                });
+            // Play video and audio together
+            Promise.all([
+                videoPlayer.play(),
+                correspondingAudio ? audioPlayer.play() : Promise.resolve()
+            ]).catch(error => {
+                console.error('Error playing media:', error);
+                displayError('Error playing media');
+            });
+
+            // Ensure video keeps playing even if audio ends
+            audioPlayer.onended = () => {
+                if (videoPlayer.currentTime < videoPlayer.duration) {
+                    audioPlayer.currentTime = 0;
+                    audioPlayer.play().catch(console.error);
+                }
+            };
         } else if (media.type === 'audio') {
             videoPlayer.src = '';
             videoPlayer.style.display = 'none';
@@ -77,19 +88,28 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Audio source URL:', audioPlayer.src);
     }
 
+    // Modify the video onended event to handle looping
     videoPlayer.onended = () => {
-        console.log('Video ended, playing next...');
-        currentIndex = (currentIndex + 1) % mediaFiles.length;
-        playNextMedia();
-    };
-
-    audioPlayer.onended = () => {
-        console.log('Audio ended, playing next...');
-        if (mediaFiles[currentIndex].type === 'audio') {
+        console.log('Video ended, looping or playing next...');
+        if (audioPlayer.src && audioPlayer.currentTime < audioPlayer.duration) {
+            // If audio is still playing, loop the video
+            videoPlayer.currentTime = 0;
+            videoPlayer.play().catch(console.error);
+        } else {
+            // Move to the next media
             currentIndex = (currentIndex + 1) % mediaFiles.length;
             playNextMedia();
         }
     };
+
+    function syncAudioVideo() {
+        if (Math.abs(videoPlayer.currentTime - audioPlayer.currentTime) > 0.3) {
+            audioPlayer.currentTime = videoPlayer.currentTime;
+        }
+    }
+
+    // Call this function periodically
+    setInterval(syncAudioVideo, 1000);
 
     function displayError(message) {
         const errorDisplay = document.getElementById('errorDisplay');
