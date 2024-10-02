@@ -57,18 +57,19 @@ document.addEventListener('DOMContentLoaded', () => {
             videoPlayer.style.display = 'block';
             const correspondingAudio = getCorrespondingAudio(media.file);
             audioPlayer.src = correspondingAudio;
-            videoPlayer.play().catch(error => {
-                console.error('Error playing video:', error);
-                displayError('Error playing video');
+            
+            // Create a promise to play both video and audio
+            const playPromise = Promise.all([
+                videoPlayer.play(),
+                correspondingAudio ? audioPlayer.play() : Promise.resolve()
+            ]);
+
+            playPromise.catch(error => {
+                console.error('Error playing media:', error);
+                displayError('Error playing media');
             });
-            if (correspondingAudio) {
-                audioPlayer.play().catch(error => {
-                    console.error('Error playing corresponding audio:', error);
-                    displayError('Error playing corresponding audio');
-                });
-            }
         } else if (media.type === 'audio') {
-            videoPlayer.src = ''; // Clear any previous video
+            videoPlayer.src = '';
             videoPlayer.style.display = 'none';
             audioPlayer.src = `audio/${media.file}`;
             audioPlayer.play().catch(error => {
@@ -87,14 +88,9 @@ document.addEventListener('DOMContentLoaded', () => {
             playNextMedia();
         };
 
-        videoPlayer.onerror = (e) => {
-            console.error('Error loading video:', e);
-            displayError('Error loading video');
-        };
-
-        audioPlayer.onerror = (e) => {
-            console.error('Error loading audio:', e);
-            displayError('Error loading audio');
+        videoPlayer.onerror = audioPlayer.onerror = (e) => {
+            console.error('Error loading media:', e);
+            displayError('Error loading media');
         };
     }
 
