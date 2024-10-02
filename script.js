@@ -47,35 +47,41 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Total media files:', mediaFiles);
 
         let videoFile = mediaFiles.find(media => media.type === 'video');
-        let audioFile = mediaFiles[currentIndex];
+        let audioFile = mediaFiles.find(media => media.type === 'audio');
 
         if (videoFile) {
             videoPlayer.src = `video/${videoFile.file}`;
             videoPlayer.style.display = 'block';
             videoPlayer.loop = true; // Make the video loop
-            videoPlayer.play().catch(error => {
-                console.error('Error playing video:', error);
-                displayError('Error playing video');
-            });
         }
 
-        if (audioFile && audioFile.type === 'audio') {
+        if (audioFile) {
             audioPlayer.src = `audio/${audioFile.file}`;
             audioPlayer.style.display = 'none'; // Hide audio player
-            audioPlayer.play().catch(error => {
-                console.error('Error playing audio:', error);
-                displayError('Error playing audio');
-            });
         }
+
+        // Play both video and audio simultaneously
+        Promise.all([videoPlayer.play(), audioPlayer.play()]).catch(error => {
+            console.error('Error playing media:', error);
+            displayError('Error playing media');
+        });
 
         console.log('Video source URL:', videoPlayer.src);
         console.log('Audio source URL:', audioPlayer.src);
     }
 
+    // Update the audio ended event to play the next audio file
     audioPlayer.onended = () => {
         console.log('Audio ended, playing next...');
         currentIndex = (currentIndex + 1) % mediaFiles.filter(media => media.type === 'audio').length;
-        playNextMedia();
+        let nextAudioFile = mediaFiles.filter(media => media.type === 'audio')[currentIndex];
+        if (nextAudioFile) {
+            audioPlayer.src = `audio/${nextAudioFile.file}`;
+            audioPlayer.play().catch(error => {
+                console.error('Error playing next audio:', error);
+                displayError('Error playing next audio');
+            });
+        }
     };
 
     function displayError(message) {
