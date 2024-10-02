@@ -58,16 +58,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const correspondingAudio = getCorrespondingAudio(media.file);
             audioPlayer.src = correspondingAudio;
             
-            // Create a promise to play both video and audio
-            const playPromise = Promise.all([
-                videoPlayer.play(),
-                correspondingAudio ? audioPlayer.play() : Promise.resolve()
-            ]);
-
-            playPromise.catch(error => {
-                console.error('Error playing media:', error);
-                displayError('Error playing media');
-            });
+            Promise.all([videoPlayer.play(), correspondingAudio ? audioPlayer.play() : Promise.resolve()])
+                .catch(error => {
+                    console.error('Error playing media:', error);
+                    displayError('Error playing media');
+                });
         } else if (media.type === 'audio') {
             videoPlayer.src = '';
             videoPlayer.style.display = 'none';
@@ -80,19 +75,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         console.log('Video source URL:', videoPlayer.src);
         console.log('Audio source URL:', audioPlayer.src);
+    }
 
-        // Set up event listeners for both players
-        videoPlayer.onended = audioPlayer.onended = () => {
-            console.log('Media ended, playing next...');
+    videoPlayer.onended = () => {
+        console.log('Video ended, playing next...');
+        currentIndex = (currentIndex + 1) % mediaFiles.length;
+        playNextMedia();
+    };
+
+    audioPlayer.onended = () => {
+        console.log('Audio ended, playing next...');
+        if (mediaFiles[currentIndex].type === 'audio') {
             currentIndex = (currentIndex + 1) % mediaFiles.length;
             playNextMedia();
-        };
-
-        videoPlayer.onerror = audioPlayer.onerror = (e) => {
-            console.error('Error loading media:', e);
-            displayError('Error loading media');
-        };
-    }
+        }
+    };
 
     function displayError(message) {
         const errorDisplay = document.getElementById('errorDisplay');
