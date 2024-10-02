@@ -48,8 +48,18 @@ document.addEventListener('DOMContentLoaded', () => {
         videoPlayer.currentTime = 0;
         audioPlayer.currentTime = 0;
 
-        const media = mediaFiles[currentIndex];
-        console.log('Playing next media:', media);
+        let media = mediaFiles[currentIndex];
+        console.log('Attempting to play media:', media);
+
+        // Ensure we're playing the correct media type
+        while (
+            (media.type === 'video' && videoPlayer.src === `video/${media.file}`) ||
+            (media.type === 'audio' && audioPlayer.src === `audio/${media.file}`)
+        ) {
+            currentIndex = (currentIndex + 1) % mediaFiles.length;
+            media = mediaFiles[currentIndex];
+            console.log('Skipping to next media:', media);
+        }
 
         if (media.type === 'video') {
             videoPlayer.src = `video/${media.file}`;
@@ -73,18 +83,10 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Audio source URL:', audioPlayer.src);
     }
 
-    videoPlayer.onended = () => {
-        console.log('Video ended, playing next...');
+    videoPlayer.onended = audioPlayer.onended = () => {
+        console.log('Media ended, playing next...');
         currentIndex = (currentIndex + 1) % mediaFiles.length;
         playNextMedia();
-    };
-
-    audioPlayer.onended = () => {
-        console.log('Audio ended, playing next...');
-        if (mediaFiles[currentIndex].type === 'audio') {
-            currentIndex = (currentIndex + 1) % mediaFiles.length;
-            playNextMedia();
-        }
     };
 
     function displayError(message) {
